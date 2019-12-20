@@ -1,4 +1,4 @@
-package config;
+package com.lr.spring.framework.webmvc.config;
 /**
  * @Auther: 45417
  * @Date: 2019/12/17 18:32
@@ -6,7 +6,6 @@ package config;
  */
 
 import lombok.Data;
-import org.omg.CORBA.CODESET_INCOMPATIBLE;
 
 /**
  *
@@ -26,6 +25,6 @@ public class Config {
     private String beanName;
 
     public static void main(String[] args){
-
+        new Config();
     }
 }
