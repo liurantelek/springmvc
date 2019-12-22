@@ -15,6 +15,10 @@ public class LRBeanWrapper {
     private Object wrappedInstance;
     private Class<?> wrappedClass;
 
+    public LRBeanWrapper(Object instance) {
+    this.wrappedInstance = instance;
+    }
+
     public Object getWrappedInstance() {
         return wrappedInstance;
     }

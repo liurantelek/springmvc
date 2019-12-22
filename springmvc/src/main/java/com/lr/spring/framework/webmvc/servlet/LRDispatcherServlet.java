@@ -23,6 +23,8 @@ import java.io.IOException;
  */
 public class LRDispatcherServlet extends HttpServlet {
 
+    private final String LOCATION = "contextConfigLocation";
+
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
