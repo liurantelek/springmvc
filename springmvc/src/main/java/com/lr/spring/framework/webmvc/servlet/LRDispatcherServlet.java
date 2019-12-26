@@ -5,9 +5,7 @@ package com.lr.spring.framework.webmvc.servlet;/**
  */
 
 import com.lr.spring.framework.context.LRApplicationContext;
-import com.lr.spring.framework.webmvc.LRHandlerAdapter;
-import com.lr.spring.framework.webmvc.LRHandlerMapping;
-import com.lr.spring.framework.webmvc.LRViewResolver;
+import com.lr.spring.framework.webmvc.*;
 import com.lr.spring.framework.webmvc.annotation.LRController;
 import com.lr.spring.framework.webmvc.annotation.LRRequestMapping;
 
@@ -16,12 +14,11 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -108,7 +105,6 @@ public class LRDispatcherServlet extends HttpServlet {
                     String regex = ("/"+baseUrl+requestMapping.value ().replaceAll ("\\*",".*")).replaceAll ("/+","/");
                     Pattern pattern = Pattern.compile (regex);
                     this.handlerMappings.add (new LRHandlerMapping (pattern,controller,method));
-                    ;
                 }
 
             }
@@ -121,6 +117,10 @@ public class LRDispatcherServlet extends HttpServlet {
         //在初始化阶段，我们能做的时，将这些参数的名字或者类型按照一定的顺序保存下来
         //因为后边反射调用的时候，传的形参就是换一个数组
         //可以通过记录这些参数的位置index，逐个从数组中取值，这样就和参数的顺序无关了
+        for(LRHandlerMapping handlerMapping:this.handlerMappings){
+            //每个方法里有一个参数列表，这里保存的是形参列表
+            this.handlerAdapters.put(handlerMapping,new LRHandlerAdapter());
+        }
     }
 
     private void initHandlerExceptionResolver(LRApplicationContext context) {
@@ -136,6 +136,14 @@ public class LRDispatcherServlet extends HttpServlet {
     }
 
     private void initViewResolvers(LRApplicationContext context) {
+        //在页面输入http://localhost:80/first.html
+        //解决页面名字和末班文件关联的问题
+        String templateRoot = context.getConfig().getProperty("templateRoot");
+        String templateRootPath = this.getClass().getClassLoader().getResource(templateRoot).getFile();
+        File templateRootDir = new File(templateRootPath);
+        for(File template:templateRootDir.listFiles()){
+            this.viewResolvers.add(new LRViewResolver(templateRoot));
+        }
     }
 
     private void initMultipartResolver(LRApplicationContext context) {
@@ -151,6 +159,73 @@ public class LRDispatcherServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        super.doPost(req, resp);
+        try {
+            doDispatch(req,resp);
+        } catch (Exception e) {
+            resp.getWriter().write("<font size='25' color='blue'>500 Exception</font> <br/> Details:" +
+                    "<br/>"+ Arrays.toString(e.getStackTrace()).replaceAll("\\[\\]","").replaceAll("\\s","\r\n")
+            +"<font color='green'><i>Copyright@LiuRanEDU</i></font>");
+            e.printStackTrace();
+        }
+    }
+
+    private void doDispatch(HttpServletRequest request,HttpServletResponse response)throws Exception{
+        //根据用户的请求URL来获得一个Handler
+        LRHandlerMapping handler = getHandler(request);
+        if(handler == null){
+            processDispathcResult(request,response,new LRModelAndView("404"));
+            return;
+        }
+        LRHandlerAdapter ha = getHandlerAdapter(handler);
+        LRModelAndView mv = ha.handle(request,response,handler);
+    }
+
+    private LRHandlerAdapter getHandlerAdapter(LRHandlerMapping handler) {
+        if(this.handlerAdapters.isEmpty()){
+            return null;
+        }
+        LRHandlerAdapter ha = this.handlerAdapters.get(handler);
+        if(ha.supports(handler)){
+            return ha;
+        }
+        return null;
+    }
+
+    private void processDispathcResult(HttpServletRequest request, HttpServletResponse response, LRModelAndView lrModelAndView) throws Exception {
+        //调用ViewAndResolver的resolverViewName()方法
+        if(null == lrModelAndView){
+            return;
+        }
+        if(this.viewResolvers.isEmpty()){
+            return;
+        }
+        if(this.viewResolvers != null){
+            for(LRViewResolver viewResolver:this.viewResolvers){
+                LRView view = viewResolver.resolveViewName(lrModelAndView.getViewName(),null);
+                if(view != null){
+                    view.render(lrModelAndView.getModel(),request,response);
+                    return;
+                }
+            }
+        }
+    }
+
+
+    private LRHandlerMapping getHandler(HttpServletRequest request) {
+        if(this.handlerMappings.isEmpty()){
+            return null;
+        }
+        String url = request.getRequestURI();
+        String contextPath = request.getContextPath();
+        url = url.replace(contextPath,"").replaceAll("/+","/");
+        for(LRHandlerMapping mapping:this.handlerMappings){
+            Matcher matcher = mapping.getPattern().matcher(url);
+            if(!matcher.matches()){
+                continue;
+            }
+            return mapping;
+
+        }
+        return null;
     }
 }

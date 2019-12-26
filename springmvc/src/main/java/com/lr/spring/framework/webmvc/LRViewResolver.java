@@ -4,7 +4,10 @@ package com.lr.spring.framework.webmvc;/**
  * @Description:
  */
 
+import com.sun.xml.internal.ws.util.StringUtils;
+
 import java.io.File;
+import java.util.Locale;
 
 /**
  *
@@ -30,4 +33,19 @@ public class LRViewResolver {
         this.templateRootDir = new File(templateRootPath);
     }
 
+
+    public LRView resolveViewName(String viewName, Locale locale)throws Exception {
+        this.viewName = viewName;
+        if(null == viewName || "".equals(viewName.trim())){
+            return null;
+        }
+        viewName = viewName.endsWith(DEFAULT_TEMPLATE_SUFFIX)?viewName:(viewName+DEFAULT_TEMPLATE_SUFFIX);
+        File templateFile = new File((templateRootDir.getPath()+"/"+viewName).replaceAll("/+","/"));
+        return new LRView(templateFile);
+
+    }
+
+    public String getViewName(){
+        return viewName;
+    }
 }
