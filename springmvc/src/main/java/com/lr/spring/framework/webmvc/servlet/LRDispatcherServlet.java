@@ -178,6 +178,7 @@ public class LRDispatcherServlet extends HttpServlet {
         }
         LRHandlerAdapter ha = getHandlerAdapter(handler);
         LRModelAndView mv = ha.handle(request,response,handler);
+        processDispathcResult(request,response,mv);
     }
 
     private LRHandlerAdapter getHandlerAdapter(LRHandlerMapping handler) {

@@ -10,6 +10,7 @@ import com.lr.spring.framework.webmvc.annotation.LRRequestParam;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -32,7 +33,7 @@ public class LRHandlerAdapter {
     }
 
 
-    public LRModelAndView handle(HttpServletRequest request, HttpServletResponse response, Object handler) {
+    public LRModelAndView handle(HttpServletRequest request, HttpServletResponse response, Object handler) throws InvocationTargetException, IllegalAccessException {
         LRHandlerMapping handlerMapping = (LRHandlerMapping) handler;
         //每个方法有一个参数列表，这里保存的是形参列表
         Map<String,Integer> paramMapping = new HashMap<>();
@@ -81,7 +82,27 @@ public class LRHandlerAdapter {
             //所以要针对我们传过来的参数进行类型转换
             paramValues[index] = caseStringValue(value,paramTypes[index]);
         }
-        return null;
+        if(paramMapping.containsKey(HttpServletRequest.class.getName())){
+            int reqIndex = paramMapping.get(HttpServletRequest.class.getName());
+            paramValues[reqIndex] = request;
+        }
+        if(paramMapping.containsKey(HttpServletResponse.class.getName())){
+            int respIndex = paramMapping.get(HttpServletResponse.class.getName());
+            paramValues[respIndex] = response;
+        }
+
+        //4、从handler中取出Controller、Method，然后利用反射机制进行调用
+        Object result = handlerMapping.getMethod().invoke(handlerMapping.getController(),paramValues);
+        if(result == null){
+            return null;
+        }
+
+        boolean isModelAndView = handlerMapping.getMethod().getReturnType()== LRModelAndView.class;
+        if(isModelAndView){
+            return (LRModelAndView) result;
+        }else {
+            return null;
+        }
 
     }
 
@@ -89,7 +110,9 @@ public class LRHandlerAdapter {
         if(clazz == String.class){
             return value;
         }else if(clazz == Integer.class){
-            return null;
+            return Integer.valueOf(value);
+        }else if(clazz == int.class){
+            return Integer.valueOf(value).intValue();
         }else {
             return null;
         }
