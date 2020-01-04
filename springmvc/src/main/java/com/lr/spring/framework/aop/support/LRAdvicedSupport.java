@@ -6,6 +6,9 @@ package com.lr.spring.framework.aop.support;/**
 
 import ch.qos.logback.core.LogbackException;
 import com.lr.spring.framework.aop.LRAopConfig;
+import com.lr.spring.framework.aop.aspect.LRAfterReturningAdvice;
+import com.lr.spring.framework.aop.aspect.LRAfterThrowAdvice;
+import com.lr.spring.framework.aop.aspect.LRMethodBeforeAdvice;
 import com.sun.org.apache.xerces.internal.impl.xpath.regex.Match;
 
 import java.lang.invoke.MethodHandle;
@@ -75,13 +78,13 @@ public class LRAdvicedSupport {
         return pointCutClassPattern.matcher(this.targetClass.toString()).matches();
     }
 
-    private void parse(){
+    private void parse() throws IllegalAccessException, InstantiationException {
         //pointCut表达式
         String pointCut = config.getPointCut().replaceAll("\\.","\\\\").replaceAll("\\\\.\\*",".*")
                 .replaceAll("\\(","\\\\(")
                 .replaceAll("\\)","\\\\)");
         String pointCutForClass = pointCut.substring(0,pointCut.lastIndexOf("\\(")-4);
-        pointCutClassPattern = Pattern.compile("class"+pointCutForClass.substring(pointCutForClass.lastIndexOf(" ")+1));
+        pointCutClassPattern = Pattern.compile("class "+pointCutForClass.substring(pointCutForClass.lastIndexOf(" ")+1));
 
         methodCache = new HashMap<>();
         Pattern pattern = Pattern.compile(pointCut);
@@ -104,8 +107,18 @@ public class LRAdvicedSupport {
                     List<Object> advices = new LinkedList<>();
                     //前置通知
                     if(!(null == config.getAspectBefore() || "".equals(config.getAspectBefore().trim()))){
-//                        advices.add(new LRMethod)
+                        advices.add(new LRMethodBeforeAdvice (aspectMethods.get (config.getAspectBefore ()),aspectClass.newInstance ()));
                     }
+                    if(!(null == config.getAspectAfter () || "".equals (config.getAspectAfter ().trim ()))){
+                        advices.add (new LRAfterReturningAdvice (aspectMethods.get (config.getAspectAfter ()),aspectClass.newInstance ()));
+                    }
+
+                    if(!(null == config.getAspectAfterThrow () || "".equals (config.getAspectAfterThrow ().trim ()))){
+                        LRAfterThrowAdvice afterThrowAdvice = new LRAfterThrowAdvice (aspectMethods.get (config.getAspectAfterThrow ()),aspectClass.newInstance ());
+                        afterThrowAdvice.setThrowingName (config.getAspectAfterThrowingName ());
+                        advices.add (afterThrowAdvice);
+                    }
+                    methodCache.put (m,advices);
                 }
             }
 

@@ -1,5 +1,10 @@
 package com.lr.spring.framework.context;
 
+import com.lr.spring.framework.aop.LRAopConfig;
+import com.lr.spring.framework.aop.LRAopProxy;
+import com.lr.spring.framework.aop.LRCglibAopProxy;
+import com.lr.spring.framework.aop.LRJdkDynamicAopProxy;
+import com.lr.spring.framework.aop.support.LRAdvicedSupport;
 import com.lr.spring.framework.beans.LRBeanWrapper;
 import com.lr.spring.framework.beans.config.LRBeanDefinition;
 import com.lr.spring.framework.beans.config.LRBeanPostProcessor;
@@ -134,12 +139,38 @@ public class LRApplicationContext extends LRDefaultListableBeanFactory implement
             }else {
                 Class<?> clazz = Class.forName (className);
                 instance = clazz.newInstance ();
-                this.factoryBeanObjectCache.put (beanDefinition.getBeanClassName (),instance);
+                LRAdvicedSupport config = instantionAopConfig(beanDefinition);
+                config.setTargetClass (clazz);
+                config.setTarget (instance);
+                if(config.pointCutMatch ()){
+                    instance = createProxy(config).getProxy();
+                }
+                this.factoryBeanObjectCache.put (className,instance);
+                this.factoryBeanObjectCache.put (beanDefinition.getFactoryBeanName (),instance);
             }
         } catch (Exception e) {
             e.printStackTrace ();
         }
         return instance;
+    }
+
+    private LRAopProxy createProxy(LRAdvicedSupport config) {
+        Class<?> clazz = config.getTargetClass ();
+        if(clazz.getInterfaces ().length>0){
+            return  new LRJdkDynamicAopProxy (config);
+        }
+        return new LRCglibAopProxy (config);
+    }
+
+    private LRAdvicedSupport instantionAopConfig(LRBeanDefinition beanDefinition) {
+        LRAopConfig config = new LRAopConfig ();
+        config.setPointCut (reader.getConfig ().getProperty ("pointCut"));
+        config.setAspectClass (reader.getConfig ().getProperty ("aspectClass"));
+        config.setAspectBefore (reader.getConfig ().getProperty ("aspectBefore"));
+        config.setAspectAfter (reader.getConfig ().getProperty ("aspectAfter"));
+        config.setAspectAfterThrow (reader.getConfig ().getProperty ("aspectAfterThrow"));
+        config.setAspectAfterThrowingName (reader.getConfig ().getProperty ("aspectAfterThrowingName"));
+        return new LRAdvicedSupport (config);
     }
 
     @Override

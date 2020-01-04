@@ -18,7 +18,7 @@ package com.lr.spring.framework.beans.config;/**
 public class LRBeanDefinition {
     private String beanClassName; //原生bean的全类名字
     private boolean lazyInit = false;//标志是否延迟加载
-    private String factoryBeanName;//保存beanName，在IOC容器中存储的key
+    private String  factoryBeanName;//保存beanName，在IOC容器中存储的key
 
     public String getBeanClassName() {
         return beanClassName;

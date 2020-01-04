@@ -4,6 +4,8 @@ package com.lr.spring.framework.aop.intercept;/**
  * @Description:
  */
 
+import com.lr.spring.framework.aop.aspect.LRJoinPoint;
+
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -21,7 +23,7 @@ import java.util.Map;
  * 执行拦截器链，相当于Spring中ReflectiveMethodInvocation的功能
  *
  */
-public class LRMethodInvocation {
+public class LRMethodInvocation implements LRJoinPoint{
 
     private Object proxy;//代理对象
 
@@ -77,7 +79,8 @@ public class LRMethodInvocation {
         return this;
     }
 
-    public void setUserAttributes(String key,Object value ){
+    @Override
+    public void setUserAttribute(String key,Object value ){
         if(value != null){
             if(this.userAttributes == null){
                 this.userAttributes = new HashMap<>();
