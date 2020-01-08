@@ -117,12 +117,12 @@ public class ClassMappings {
         return setters;
     }
 
-    private static String getSetterName(Method setter) {
+    public static String getSetterName(Method setter) {
         String name = setter.getName().substring(3);
         return Character.toLowerCase(name.charAt(0))+name.substring(1);
     }
 
-    private static String getGetterName(Method getter) {
+    public static String getGetterName(Method getter) {
         String name = getter.getName();
         if(name.startsWith("is")){
             name = name.substring(2);
