@@ -23,32 +23,32 @@ import java.util.List;
 public final class QueryRule implements Serializable {
     private static final long serialVersionUID = 7478488057335618828L;
 
-    private static final int ASC_ORDER = 101;
-    private static final int DESD_ORDER = 102;
-    private static final int LIKE = 1;
-    private static final int IN = 2;
-    private static final int NOTIN = 3;
-    private static final int BETWEEN = 4;
-    private static final int EQ = 5;
-    private static final int NOTEQ = 6;
-    private static final int GT = 7;
-    private static final int GE = 8;
-    private static final int LT = 9;
-    private static final int LE = 10;
-    private static final int ISNULL = 11;
-    private static final int ISNOTNULL = 12;
-    private static final int ISEMPTY = 13;
-    private static final int ISNOTEMPTY = 14;
-    private static final int AND = 201;
-    private static final int OR = 202;
+    public static final int ASC_ORDER = 101;
+    public static final int DESD_ORDER = 102;
+    public static final int LIKE = 1;
+    public static final int IN = 2;
+    public static final int NOTIN = 3;
+    public static final int BETWEEN = 4;
+    public static final int EQ = 5;
+    public static final int NOTEQ = 6;
+    public static final int GT = 7;
+    public static final int GE = 8;
+    public static final int LT = 9;
+    public static final int LE = 10;
+    public static final int ISNULL = 11;
+    public static final int ISNOTNULL = 12;
+    public static final int ISEMPTY = 13;
+    public static final int ISNOTEMPTY = 14;
+    public static final int AND = 201;
+    public static final int OR = 202;
 
-    private List<Rule> ruleList = new ArrayList<>();
-    private List<QueryRule> queryRuleList = new ArrayList<>();
-    private String propertyName;
+    public List<Rule> ruleList = new ArrayList<>();
+    public List<QueryRule> queryRuleList = new ArrayList<>();
+    public String propertyName;
 
     private QueryRule(){}
 
-    private QueryRule(String propertyName){
+    public QueryRule(String propertyName){
         this.propertyName = propertyName;
     }
 
